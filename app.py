@@ -1,20 +1,24 @@
 from flask import Flask, render_template_string, request
-import random
+import random, json, os
 
 app = Flask(__name__)
+
+# JSON 파일 불러오기
+WINNING_PATH = os.path.join(os.path.dirname(__file__), 'winning_numbers.json')
+try:
+    with open(WINNING_PATH, encoding='utf-8') as f:
+        WINNING = json.load(f)
+except:
+    WINNING = {"rank1": [], "rank2": [], "rank3": []}
 
 @app.route("/")
 def home():
     return render_template_string("""
-    <html>
-    <head><title>LottoGen 홈</title></head>
-    <body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
+    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎲 LottoGen에 오신 걸 환영합니다 🎲</h1>
         <a href="/generate">무료 로또 번호 생성</a><br><br>
         <a href="/filter">제외 조합 설정하기</a>
-    </body>
-    </html>
-    """)
+    </body></html>""")
 
 @app.route("/generate")
 def generate():
@@ -36,9 +40,8 @@ def generate():
 
     def is_valid(numbers):
         numbers = sorted(numbers)
-        # 연속번호 필터링
-        max_seq = 1
-        seq = 1
+        # 연속번호 필터
+        seq, max_seq = 1, 1
         for i in range(1, len(numbers)):
             if numbers[i] == numbers[i-1] + 1:
                 seq += 1
@@ -48,37 +51,37 @@ def generate():
         if no_2seq and max_seq >= 2: return False
         if no_3seq and max_seq >= 3: return False
         if no_4seq and max_seq >= 4: return False
+
+        # 1~3등 당첨 조합 필터
+        if exclude_1st and numbers in WINNING["rank1"]: return False
+        if exclude_2nd and numbers in WINNING["rank2"]: return False
+        if exclude_3rd and numbers in WINNING["rank3"]: return False
+
         return True
 
-    while len(results) < count:
+    attempts = 0
+    while len(results) < count and attempts < 10000:
+        attempts += 1
         nums = set(fixed)
         while len(nums) < 6:
             nums.add(random.randint(1, 45))
         nums = sorted(nums)
-        if is_valid(nums):
+        if is_valid(nums) and nums not in results:
             results.append(nums)
 
     return render_template_string("""
-    <html>
-    <head><title>추천 번호</title></head>
-    <body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
+    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎰 추천 로또 번호</h1>
         {% for row in results %}
             <p style='color:blue;'>{{ row|join(' - ') }}</p>
         {% endfor %}
         <br><a href="/">← 홈으로</a>
-    </body>
-    </html>
-    """, results=results)
+    </body></html>""", results=results)
 
 @app.route("/filter")
 def filter():
     return render_template_string("""
-    <html>
-    <head>
-        <title>제외 조건 설정</title>
-    </head>
-    <body style='text-align:center;font-family:sans-serif;margin-top:30px;'>
+    <html><body style='text-align:center;font-family:sans-serif;margin-top:30px;'>
         <h1>🎯 로또 번호 제외 조건 설정</h1>
         <form action="/generate" method="get">
             <h3>당첨번호 제외</h3>
@@ -91,7 +94,7 @@ def filter():
             <input type="checkbox" name="no_3seq" checked> 3연속 제외<br>
             <input type="checkbox" name="no_4seq"> 4연속 이상 제외<br>
 
-            <h3>고정 번호 입력 (최대 5개)</h3>
+            <h3>고정 번호 입력</h3>
             {% for i in range(1, 6) %}
                 <input type="number" name="fixed{{i}}" min="1" max="45">
             {% endfor %}
@@ -106,9 +109,4 @@ def filter():
             <button type="submit">추천 번호 받기</button>
         </form>
         <br><a href="/">← 홈으로</a>
-    </body>
-    </html>
-    """)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    </body></html>""")
