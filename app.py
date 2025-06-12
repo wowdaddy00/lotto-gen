@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request, redirect, url_for
+from flask import Flask, render_template_string, request
 import random
 
 app = Flask(__name__)
@@ -7,53 +7,69 @@ app = Flask(__name__)
 def home():
     return render_template_string("""
     <html>
-    <head>
-        <title>LottoGen 홈</title>
-        <style>
-            body { font-family: sans-serif; text-align: center; margin-top: 100px; }
-            h1 { font-size: 30px; }
-            a.button {
-                display: inline-block;
-                margin: 20px;
-                padding: 15px 30px;
-                font-size: 18px;
-                text-decoration: none;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 10px;
-            }
-        </style>
-    </head>
-    <body>
+    <head><title>LottoGen 홈</title></head>
+    <body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎲 LottoGen에 오신 걸 환영합니다 🎲</h1>
-        <a href='/generate' class='button'>무료 로또 번호 생성</a>
-        <a href='/filter' class='button'>제외 조합 설정하기</a>
+        <a href="/generate">무료 로또 번호 생성</a><br><br>
+        <a href="/filter">제외 조합 설정하기</a>
     </body>
     </html>
     """)
 
 @app.route("/generate")
 def generate():
-    numbers = sorted(random.sample(range(1, 46), 6))
-    return render_template_string(f"""
+    exclude_1st = request.args.get("exclude_1st") == "on"
+    exclude_2nd = request.args.get("exclude_2nd") == "on"
+    exclude_3rd = request.args.get("exclude_3rd") == "on"
+    no_2seq = request.args.get("no_2seq") == "on"
+    no_3seq = request.args.get("no_3seq") == "on"
+    no_4seq = request.args.get("no_4seq") == "on"
+
+    fixed = []
+    for i in range(1, 6):
+        val = request.args.get(f"fixed{i}")
+        if val and val.isdigit():
+            fixed.append(int(val))
+
+    count = int(request.args.get("count", 1))
+    results = []
+
+    def is_valid(numbers):
+        numbers = sorted(numbers)
+        # 연속번호 필터링
+        max_seq = 1
+        seq = 1
+        for i in range(1, len(numbers)):
+            if numbers[i] == numbers[i-1] + 1:
+                seq += 1
+                max_seq = max(max_seq, seq)
+            else:
+                seq = 1
+        if no_2seq and max_seq >= 2: return False
+        if no_3seq and max_seq >= 3: return False
+        if no_4seq and max_seq >= 4: return False
+        return True
+
+    while len(results) < count:
+        nums = set(fixed)
+        while len(nums) < 6:
+            nums.add(random.randint(1, 45))
+        nums = sorted(nums)
+        if is_valid(nums):
+            results.append(nums)
+
+    return render_template_string("""
     <html>
-    <head>
-        <title>로또 번호 생성</title>
-        <style>
-            body {{ font-family: sans-serif; text-align: center; margin-top: 100px; }}
-            h1 {{ font-size: 30px; }}
-            h2 {{ font-size: 26px; color: blue; }}
-            a {{ text-decoration: none; color: gray; font-size: 14px; }}
-        </style>
-    </head>
-    <body>
-        <h1>🎯 오늘의 로또 번호</h1>
-        <h2>{' - '.join(map(str, numbers))}</h2>
-        <br>
-        <a href="/">← 홈으로 돌아가기</a>
+    <head><title>추천 번호</title></head>
+    <body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
+        <h1>🎰 추천 로또 번호</h1>
+        {% for row in results %}
+            <p style='color:blue;'>{{ row|join(' - ') }}</p>
+        {% endfor %}
+        <br><a href="/">← 홈으로</a>
     </body>
     </html>
-    """)
+    """, results=results)
 
 @app.route("/filter")
 def filter():
@@ -61,50 +77,38 @@ def filter():
     <html>
     <head>
         <title>제외 조건 설정</title>
-        <style>
-            body { font-family: sans-serif; text-align: center; margin: 50px; }
-            h1 { font-size: 26px; margin-bottom: 30px; }
-            form { display: inline-block; text-align: left; }
-            label { font-weight: bold; display: block; margin-top: 20px; }
-            input[type='number'] { width: 60px; margin: 5px; }
-            input[type='checkbox'] { margin-right: 5px; }
-            select { padding: 5px; margin-top: 10px; }
-            button { margin-top: 30px; padding: 10px 20px; font-size: 16px; }
-        </style>
     </head>
-    <body>
+    <body style='text-align:center;font-family:sans-serif;margin-top:30px;'>
         <h1>🎯 로또 번호 제외 조건 설정</h1>
-        <form action="/generate" method="GET">
-            <label>✅ 제외할 당첨조합</label>
-            <input type="checkbox" name="exclude_1st" checked> 1등 조합 제외<br>
-            <input type="checkbox" name="exclude_2nd"> 2등 조합 제외<br>
-            <input type="checkbox" name="exclude_3rd"> 3등 조합 제외<br>
+        <form action="/generate" method="get">
+            <h3>당첨번호 제외</h3>
+            <input type="checkbox" name="exclude_1st" checked> 1등 제외<br>
+            <input type="checkbox" name="exclude_2nd"> 2등 제외<br>
+            <input type="checkbox" name="exclude_3rd"> 3등 제외<br>
 
-            <label>⚠️ 연속번호 제외</label>
+            <h3>연속번호 제외</h3>
             <input type="checkbox" name="no_2seq"> 2연속 제외<br>
             <input type="checkbox" name="no_3seq" checked> 3연속 제외<br>
             <input type="checkbox" name="no_4seq"> 4연속 이상 제외<br>
 
-            <label>🔒 고정하고 싶은 번호 (1~45)</label>
-            <input type="number" name="fixed1" min="1" max="45">
-            <input type="number" name="fixed2" min="1" max="45">
-            <input type="number" name="fixed3" min="1" max="45">
-            <input type="number" name="fixed4" min="1" max="45">
-            <input type="number" name="fixed5" min="1" max="45">
+            <h3>고정 번호 입력 (최대 5개)</h3>
+            {% for i in range(1, 6) %}
+                <input type="number" name="fixed{{i}}" min="1" max="45">
+            {% endfor %}
 
-            <label>🔢 추천 조합 개수</label>
+            <h3>추천 개수</h3>
             <select name="count">
                 <option value="1">1개</option>
                 <option value="5">5개</option>
                 <option value="10">10개</option>
-                <option value="20">20개</option>
-            </select>
+            </select><br><br>
 
-            <br>
-            <button type="submit">🎰 번호 추천받기</button>
+            <button type="submit">추천 번호 받기</button>
         </form>
-        <br><br>
-        <a href="/">← 홈으로 돌아가기</a>
+        <br><a href="/">← 홈으로</a>
     </body>
     </html>
     """)
+
+if __name__ == "__main__":
+    app.run(debug=True)
