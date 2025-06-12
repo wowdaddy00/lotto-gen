@@ -1,6 +1,7 @@
-# LottoGen
-로또 번호를 무작위로 추천해주는 간단한 Flask 기반 웹앱입니다.
+# LottoGen v2
 
-## 실행 방법
-1. Flask 설치: `pip install flask gunicorn`
-2. 실행: `gunicorn app:app`
+홈 메뉴 중심 구조로 개편된 버전입니다.
+기능:
+- 홈 메뉴
+- /generate: 번호 생성
+- /filter: 제외 조건 페이지(준비중)
