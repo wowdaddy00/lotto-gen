@@ -18,6 +18,7 @@ def home():
         <h1>🎲 LottoGen에 오신 걸 환영합니다 🎲</h1>
         <a href="/generate">무료 로또 번호 생성</a><br><br>
         <a href="/filter">제외 조합 설정하기</a>
+        <a href="/stats">출현 통계 보기</a><br><br>
     </body></html>""")
 
 @app.route("/generate")
@@ -163,5 +164,31 @@ def filter():
 
             <button type="submit">추천 번호 받기</button>
         </form>
+        <br><a href="/">← 홈으로</a>
+    </body></html>""")
+
+@app.route("/stats")
+def stats():
+    try:
+        WINNING_PATH = os.path.join(os.path.dirname(__file__), 'static', 'winning_numbers_full.json')
+        with open(WINNING_PATH, encoding='utf-8') as f:
+            data = json.load(f)
+    except:
+        return "통계 데이터를 불러오지 못했습니다."
+
+    all_numbers = data["rank1"] + data["rank2"] + data["rank3"]
+    flattened = [num for sublist in all_numbers for num in sublist]
+    counts = {i: flattened.count(i) for i in range(1, 46)}
+
+    table_html = "<table border='1' style='margin:auto; text-align:center;'>"
+    table_html += "<tr><th>번호</th><th>출현 횟수</th></tr>"
+    for number, count in sorted(counts.items()):
+        table_html += f"<tr><td>{number}</td><td>{count}</td></tr>"
+    table_html += "</table>"
+
+    return render_template_string(f"""
+    <html><body style='font-family:sans-serif; text-align:center; margin-top:40px;'>
+        <h1>📊 로또 번호 출현 통계</h1>
+        {table_html}
         <br><a href="/">← 홈으로</a>
     </body></html>""")
