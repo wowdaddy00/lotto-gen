@@ -3,7 +3,7 @@ import random, json, os
 
 app = Flask(__name__)
 
-# JSON 파일 경로 (1등, 2등, 3등 모두 포함)
+# JSON 파일 경로
 WINNING_PATH = os.path.join(os.path.dirname(__file__), 'static', 'winning_numbers_full.json')
 try:
     with open(WINNING_PATH, encoding='utf-8') as f:
@@ -37,10 +37,16 @@ def generate():
         if val and val.isdigit():
             fixed.append(int(val))
 
+    # 사용자 제외 번호 입력
+    exclude_nums = []
+    for i in range(1, 7):
+        val = request.args.get(f"exclude{i}")
+        if val and val.isdigit():
+            exclude_nums.append(int(val))
+
     count = int(request.args.get("count", 1))
     results = []
 
-    # 회차 제한 필터링
     def filter_by_range(data):
         if range_limit == "all":
             return data
@@ -50,7 +56,6 @@ def generate():
         except:
             return data
 
-    # 조합 검증 함수
     def is_valid(numbers):
         numbers = sorted(numbers)
         seq, max_seq = 1, 1
@@ -67,6 +72,9 @@ def generate():
         if exclude_1st and numbers in filter_by_range(WINNING["rank1"]): return False
         if exclude_2nd and numbers in filter_by_range(WINNING["rank2"]): return False
         if exclude_3rd and numbers in filter_by_range(WINNING["rank3"]): return False
+
+        if any(n in exclude_nums for n in numbers): return False  # 사용자 제외 번호
+
         return True
 
     attempts = 0
@@ -107,6 +115,11 @@ def filter():
             <h3>고정 번호 입력</h3>
             {% for i in range(1, 6) %}
                 <input type="number" name="fixed{{i}}" min="1" max="45">
+            {% endfor %}
+
+            <h3>제외할 번호 입력</h3>
+            {% for i in range(1, 7) %}
+                <input type="number" name="exclude{{i}}" min="1" max="45">
             {% endfor %}
 
             <h3>추천 개수</h3>
