@@ -4,7 +4,7 @@ import random, json, os
 app = Flask(__name__)
 
 # JSON 파일 불러오기
-WINNING_PATH = os.path.join(os.path.dirname(__file__), 'winning_numbers.json')
+WINNING_PATH = os.path.join(os.path.dirname(__file__), 'static', 'winning_numbers_full.json')
 try:
     with open(WINNING_PATH, encoding='utf-8') as f:
         WINNING = json.load(f)
