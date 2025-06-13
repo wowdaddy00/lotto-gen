@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template_string, request
 import random, json, os
 
@@ -17,8 +18,8 @@ def home():
     <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎲 LottoGen에 오신 걸 환영합니다 🎲</h1>
         <a href="/generate">무료 로또 번호 생성</a><br><br>
-        <a href="/filter">제외 조합 설정하기</a>
-        <a href="/stats">출현 통계 보기</a><br><br>
+        <a href="/filter">제외 조합 설정하기</a><br><br>
+        <a href="/stats">출현 통계 보기</a>
     </body></html>""")
 
 @app.route("/generate")
@@ -29,7 +30,6 @@ def generate():
     no_2seq = request.args.get("no_2seq") == "on"
     no_3seq = request.args.get("no_3seq") == "on"
     no_4seq = request.args.get("no_4seq") == "on"
-    range_option = request.args.get("range_option", "all")
 
     fixed = []
     for i in range(1, 6):
@@ -37,33 +37,14 @@ def generate():
         if val and val.isdigit():
             fixed.append(int(val))
 
-    exclude_nums = []
-    for i in range(1, 7):
-        val = request.args.get(f"exclude{i}")
-        if val and val.isdigit():
-            exclude_nums.append(int(val))
-
     count = int(request.args.get("count", 1))
     results = []
 
-    # 회차 필터용 함수
-    def filter_by_range(rank_list):
-        if range_option == "recent10":
-            return rank_list[-10:]
-        elif range_option == "recent50":
-            return rank_list[-50:]
-        elif range_option == "recent100":
-            return rank_list[-100:]
-        else:
-            return rank_list
-
     def is_valid(numbers):
         numbers = sorted(numbers)
-
-        # 연속번호 필터
         seq, max_seq = 1, 1
         for i in range(1, len(numbers)):
-            if numbers[i] == numbers[i - 1] + 1:
+            if numbers[i] == numbers[i-1] + 1:
                 seq += 1
                 max_seq = max(max_seq, seq)
             else:
@@ -71,15 +52,9 @@ def generate():
         if no_2seq and max_seq >= 2: return False
         if no_3seq and max_seq >= 3: return False
         if no_4seq and max_seq >= 4: return False
-
-        # 사용자 직접 제외번호 포함 시 제외
-        if any(n in numbers for n in exclude_nums): return False
-
-        # 1~3등 당첨 조합 필터
-        if exclude_1st and numbers in filter_by_range(WINNING["rank1"]): return False
-        if exclude_2nd and numbers in filter_by_range(WINNING["rank2"]): return False
-        if exclude_3rd and numbers in filter_by_range(WINNING["rank3"]): return False
-
+        if exclude_1st and numbers in WINNING["rank1"]: return False
+        if exclude_2nd and numbers in WINNING["rank2"]: return False
+        if exclude_3rd and numbers in WINNING["rank3"]: return False
         return True
 
     attempts = 0
@@ -93,33 +68,13 @@ def generate():
             results.append(nums)
 
     return render_template_string("""
-    <html>
-    <head>
-        <style>
-            body { text-align:center; font-family:sans-serif; margin-top:50px; }
-            .lotto { font-size: 20px; color: blue; }
-            .copy-btn { margin-left: 10px; padding: 5px 10px; font-size: 14px; }
-        </style>
-        <script>
-            function copyToClipboard(text) {
-                navigator.clipboard.writeText(text).then(function() {
-                    alert("복사되었습니다: " + text);
-                });
-            }
-        </script>
-    </head>
-    <body>
+    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎰 추천 로또 번호</h1>
         {% for row in results %}
-            <p class='lotto'>
-                {{ row|join(' - ') }}
-                <button class='copy-btn' onclick="copyToClipboard('{{ row|join(' - ') }}')">복사</button>
-            </p>
+            <p style='color:blue;'>{{ row|join(' - ') }}</p>
         {% endfor %}
         <br><a href="/">← 홈으로</a>
-    </body>
-    </html>
-    """, results=results)
+    </body></html>""", results=results)
 
 @app.route("/filter")
 def filter():
@@ -137,23 +92,10 @@ def filter():
             <input type="checkbox" name="no_3seq" checked> 3연속 제외<br>
             <input type="checkbox" name="no_4seq"> 4연속 이상 제외<br>
 
-            <h3>제외할 번호 직접 입력</h3>
-            {% for i in range(1, 7) %}
-                <input type="number" name="exclude{{i}}" min="1" max="45">
-            {% endfor %}
-
             <h3>고정 번호 입력</h3>
             {% for i in range(1, 6) %}
                 <input type="number" name="fixed{{i}}" min="1" max="45">
             {% endfor %}
-
-            <h3>회차 범위 설정</h3>
-            <select name="range_option">
-                <option value="all">전체</option>
-                <option value="recent100">최근 100회</option>
-                <option value="recent50">최근 50회</option>
-                <option value="recent10">최근 10회</option>
-            </select><br>
 
             <h3>추천 개수</h3>
             <select name="count">
