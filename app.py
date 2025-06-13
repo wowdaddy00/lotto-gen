@@ -88,13 +88,32 @@ def generate():
             results.append(nums)
 
     return render_template_string("""
-    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
-        <h1>🎰 추천 로또 번호</h1>
-        {% for row in results %}
-            <p style='color:blue;'>{{ row|join(' - ') }}</p>
-        {% endfor %}
-        <br><a href="/">← 홈으로</a>
-    </body></html>""", results=results)
+    <html>
+<head>
+    <style>
+        body { text-align:center; font-family:sans-serif; margin-top:50px; }
+        .lotto { font-size: 20px; color: blue; }
+        .copy-btn { margin-left: 10px; padding: 5px 10px; font-size: 14px; }
+    </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert("복사되었습니다: " + text);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>🎰 추천 로또 번호</h1>
+    {% for row in results %}
+        <p class='lotto'>
+            {{ row|join(' - ') }}
+            <button class='copy-btn' onclick="copyToClipboard('{{ row|join(' - ') }}')">복사</button>
+        </p>
+    {% endfor %}
+    <br><a href="/">← 홈으로</a>
+</body>
+</html>, results=results)
 
 @app.route("/filter")
 def filter():
