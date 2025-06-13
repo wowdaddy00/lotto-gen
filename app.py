@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template_string, request
 import random, json, os
 
@@ -11,6 +10,10 @@ try:
         WINNING = json.load(f)
 except:
     WINNING = {"rank1": [], "rank2": [], "rank3": []}
+
+def make_tuple_list(rank_list):
+    # 각 조합을 정렬하여 tuple로 변환 (순서 무관 비교용)
+    return [tuple(sorted(row)) for row in rank_list]
 
 @app.route("/")
 def home():
@@ -31,7 +34,7 @@ def generate():
     no_3seq = request.args.get("no_3seq") == "on"
     no_4seq = request.args.get("no_4seq") == "on"
     range_option = request.args.get("range_option", "all")
-    
+
     fixed = []
     for i in range(1, 6):
         val = request.args.get(f"fixed{i}")
@@ -43,11 +46,11 @@ def generate():
         val = request.args.get(f"exclude{i}")
         if val and val.isdigit():
             exclude_nums.append(int(val))
-                
+
     count = int(request.args.get("count", 1))
     results = []
 
-    # 회차 필터용 함수
+    # 회차 필터용 함수 (슬라이스)
     def filter_by_range(rank_list):
         if range_option == "recent10":
             return rank_list[-10:]
@@ -57,10 +60,14 @@ def generate():
             return rank_list[-100:]
         else:
             return rank_list
-    
+
+    # ★ 핵심: 회차 옵션별 당첨조합 추출 & tuple로 변환
+    rank1 = make_tuple_list(filter_by_range(WINNING["rank1"]))
+    rank2 = make_tuple_list(filter_by_range(WINNING["rank2"]))
+    rank3 = make_tuple_list(filter_by_range(WINNING["rank3"]))
+
     def is_valid(numbers):
         numbers = sorted(numbers)
-
         # 연속번호 필터
         seq, max_seq = 1, 1
         for i in range(1, len(numbers)):
@@ -73,15 +80,16 @@ def generate():
         if no_3seq and max_seq >= 3: return False
         if no_4seq and max_seq >= 4: return False
 
-        # 사용자 직접 제외번호 포함 시 제외
+        # 직접 제외번호
         if any(n in numbers for n in exclude_nums): return False
 
-        # 1~3등 당첨 조합 필터
-        if exclude_1st and numbers in WINNING["rank1"]: return False
-        if exclude_2nd and numbers in WINNING["rank2"]: return False
-        if exclude_3rd and numbers in WINNING["rank3"]: return False
+        # ★ 핵심: 조합 제외 (tuple 비교, 순서 무관)
+        t_numbers = tuple(numbers)
+        if exclude_1st and t_numbers in rank1: return False
+        if exclude_2nd and t_numbers in rank2: return False
+        if exclude_3rd and t_numbers in rank3: return False
         return True
-    
+
     attempts = 0
     while len(results) < count and attempts < 10000:
         attempts += 1
@@ -92,12 +100,18 @@ def generate():
         if is_valid(nums) and nums not in results:
             results.append(nums)
 
+    # 결과 부족 안내
+    message = ""
+    if len(results) < count:
+        message = f"⚠️ 필터 조건이 너무 많거나 추천 개수({count}개)를 만족하지 못했습니다. {len(results)}개만 추천됩니다."
+
     return render_template_string("""
     <head>
         <style>
             body { text-align:center; font-family:sans-serif; margin-top:50px; }
             .lotto { font-size: 20px; color: blue; }
             .copy-btn { margin-left: 10px; padding: 5px 10px; font-size: 14px; }
+            .msg { color: red; margin-top: 20px; font-weight: bold; }
         </style>
         <script>
             function copyToClipboard(text) {
@@ -115,10 +129,13 @@ def generate():
                 <button class='copy-btn' onclick="copyToClipboard('{{ row|join(' - ') }}')">복사</button>
             </p>
         {% endfor %}
+        {% if message %}
+            <div class='msg'>{{ message }}</div>
+        {% endif %}
         <br><a href="/">← 홈으로</a>
     </body>
     </html>
-    """, results=results)
+    """, results=results, message=message)
 
 @app.route("/filter")
 def filter():
@@ -212,3 +229,6 @@ def stats():
         {table_html}
         <br><a href="/">← 홈으로</a>
     </body></html>""")
+
+if __name__ == "__main__":
+    app.run(debug=True)
