@@ -232,3 +232,38 @@ def stats():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+@app.route("/generate-hot10")
+def generate_hot10():
+    try:
+        with open(WINNING_PATH, encoding='utf-8') as f:
+            data = json.load(f)
+    except:
+        return "데이터를 불러오지 못했습니다."
+
+    # 최근 10회차의 1등 번호만 추출
+    recent_10 = data["rank1"][-10:]
+    flat = [num for sublist in recent_10 for num in sublist]
+
+    # 출현 빈도 계산
+    from collections import Counter
+    counts = Counter(flat)
+    top_numbers = [num for num, _ in counts.most_common(12)]
+
+    # 5개 조합 생성
+    results = []
+    attempts = 0
+    while len(results) < 5 and attempts < 1000:
+        combo = sorted(random.sample(top_numbers, 6))
+        if combo not in results:
+            results.append(combo)
+        attempts += 1
+
+    return render_template_string("""
+    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
+        <h1>🔥 최근 10주 인기번호 기반 추천</h1>
+        {% for row in results %}
+            <p style='color:red;'>{{ row|join(' - ') }}</p>
+        {% endfor %}
+        <br><a href="/">← 홈으로</a>
+    </body></html>""", results=results)
