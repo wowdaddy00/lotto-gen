@@ -1,6 +1,19 @@
 from flask import Flask, render_template_string, request
 import random, json, os
 
+BASE_HEAD = """
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQZH4QEBGX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config','G-WQZH4QEBGX');
+  </script>
+  <charset="utf-8">
+  <name="viewport" content="width=device-width, initial-scale=1">
+"""
+
+
 app = Flask(__name__)
 
 # JSON 파일 불러오기
@@ -18,13 +31,59 @@ def make_tuple_list(rank_list):
 @app.route("/")
 def home():
     return render_template_string("""
-    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
+    <html>
+    {{ base_head|safe }}
+    <body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎲 LottoGen에 오신 걸 환영합니다 🎲</h1>
         <a href="/generate">무료 로또 번호 생성</a><br><br>
         <a href="/generate-hot10">최근 10주 인기번호 추천</a><br><br>
         <a href="/filter">제외 조합 설정하기</a><br><br>
         <a href="/stats">출현 통계 보기</a>
-    </body></html>""")
+    </body></html>
+    """, base_head=BASE_HEAD)
+
+@app.route("/about")
+def about():
+    return render_template_string("""
+    <html>
+    {{ base_head|safe }}
+    <body>
+          <h1>About | LottoGen</h1>
+      <name="description" content="로또-Gen은 로또번호 생성기입니다. …">
+    <body style='font-family:sans-serif; text-align:center; margin-top:50px;'>
+      <h1>About LottoGen</h1>
+      <p>이 웹앱은 로또 번호 생성, 통계 분석, 필터링 기능을 제공합니다.</p>
+      <br><a href="/">← 홈으로</a>
+    </body></html>
+    """, base_head=BASE_HEAD)
+
+@app.route("/privacy")
+def privacy():
+    return render_template_string("""
+    <html>
+    {{ base_head|safe }}
+      <h1>Privacy Policy | LottoGen</h1>
+      <name="description" content="로또-Gen 개인정보 처리방침입니다. …">
+    <body style='font-family:sans-serif; text-align:center; margin-top:50px;'>
+      <h1>Privacy Policy</h1>
+      <p>이 사이트는 개인 정보를 수집하지 않습니다. …</p>
+      <br><a href="/">← 홈으로</a>
+    </body></html>
+    """, base_head=BASE_HEAD)
+
+@app.route("/contact")
+def contact():
+    return render_template_string("""
+    <html>
+    {{ base_head|safe }}
+      <h1>Contact | LottoGen</h1>
+      <name="description" content="로또-Gen 문의 페이지입니다. …">
+    <body style='font-family:sans-serif; text-align:center; margin-top:50px;'>
+      <h1>Contact Us</h1>
+      <p>문의: example@yourdomain.com</p>
+      <br><a href="/">← 홈으로</a>
+    </body></html>
+    """, base_head=BASE_HEAD)
 
 @app.route("/generate")
 def generate():
@@ -61,6 +120,8 @@ def generate():
             return rank_list[-100:]
         else:
             return rank_list
+
+    
 
     # ★ 핵심: 회차 옵션별 당첨조합 추출 & tuple로 변환
     rank1 = make_tuple_list(filter_by_range(WINNING["rank1"]))
@@ -107,7 +168,9 @@ def generate():
         message = f"⚠️ 필터 조건이 너무 많거나 추천 개수({count}개)를 만족하지 못했습니다. {len(results)}개만 추천됩니다."
 
     return render_template_string("""
-    <head>
+    <html>
+    {{ base_head|safe }}
+    <body>
         <style>
             body { text-align:center; font-family:sans-serif; margin-top:50px; }
             .lotto { font-size: 20px; color: blue; }
@@ -121,8 +184,7 @@ def generate():
                 });
             }
         </script>
-    </head>
-    <body>
+      <body>
         <h1>🎰 추천 로또 번호</h1>
         {% for row in results %}
             <p class='lotto'>
@@ -136,14 +198,14 @@ def generate():
         <br><a href="/">← 홈으로</a>
     </body>
     </html>
-    """, results=results, message=message)
+    """, results=results, message=message, base_head=BASE_HEAD)
 
 @app.route("/filter")
 def filter():
     return render_template_string("""
    <html>
-    <head>
-        <title>제외 조건 설정</title>
+    {{ base_head|safe }}
+        <h1>제외 조건 설정</h1>
         <style>
             body { font-family: sans-serif; text-align: center; margin: 50px; }
             h1 { font-size: 26px; margin-bottom: 30px; }
@@ -154,8 +216,7 @@ def filter():
             select { padding: 5px; margin-top: 10px; }
             button { margin-top: 30px; padding: 10px 20px; font-size: 16px; }
         </style>
-    </head>
-    <body>
+     <body>
         <h1>🎯 로또 번호 제외 조건 설정</h1>
         <form action="/generate" method="GET">
             <label>✅ 제외할 당첨조합</label>
@@ -203,7 +264,7 @@ def filter():
         <a href="/">← 홈으로 돌아가기</a>
     </body>
     </html>
-    """)
+    """, base_head=BASE_HEAD)
 
 @app.route("/stats")
 def stats():
@@ -225,11 +286,14 @@ def stats():
     table_html += "</table>"
 
     return render_template_string(f"""
-    <html><body style='font-family:sans-serif; text-align:center; margin-top:40px;'>
+    <html>
+    {{ base_head|safe }}
+    <body style='font-family:sans-serif; text-align:center; margin-top:40px;'>
         <h1>📊 로또 번호 출현 통계</h1>
         {table_html}
         <br><a href="/">← 홈으로</a>
-    </body></html>""")
+    </body></html>
+    """, base_head=BASE_HEAD)
 
 if __name__ == "__main__":
     app.run(debug=True)
@@ -261,10 +325,14 @@ def generate_hot10():
         attempts += 1
 
     return render_template_string("""
-    <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
+    <html>
+    {{ base_head|safe }}
+    <body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🔥 최근 10주 인기번호 기반 추천</h1>
         {% for row in results %}
             <p style='color:red;'>{{ row|join(' - ') }}</p>
         {% endfor %}
         <br><a href="/">← 홈으로</a>
-    </body></html>""", results=results)
+    </body></html>
+    """, results=results, base_head=BASE_HEAD)
+    
