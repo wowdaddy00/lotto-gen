@@ -1,1 +1,24 @@
+{% extends "base.html" %}
+{% block title %}로또 번호 필터 - LottoGen{% endblock %}
+{% block meta_description %}제외하고 싶은 번호를 직접 입력하고, 해당 번호가 포함된 당첨조합을 한 번에 필터링하세요!{% endblock %}
+{% block content %}
+<p>제외하고 싶은 번호(쉼표로 구분, 예: 1,9,22)를 입력하면 해당 번호가 포함된 모든 조합이 제외된 리스트를 볼 수 있습니다.</p>
+<form method="POST">
+  <input name="exclude" placeholder="예: 3,17,25">
+  <button type="submit">필터 적용</button>
+</form>
+{% if msg %}
+  <p><strong>{{ msg }}</strong></p>
+{% endif %}
+{% if filtered %}
+  <ul>
+    {% for row in filtered[:30] %}
+      <li>{{ row|join(', ') }}</li>
+    {% endfor %}
+  </ul>
+  {% if filtered|length > 30 %}
+    <p>...외 {{ filtered|length-30 }}개 더 있음.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}
 
