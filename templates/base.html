@@ -1,1 +1,57 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}LottoGen - 로또 번호 생성기{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block meta_description %}로또 번호 자동 생성기, 필터, 통계까지! LottoGen에서 무료로 이용하세요.{% endblock %}">
+  <meta name="robots" content="index, follow">
+  <!-- GA4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config','{{ ga4_id }}');
+  </script>
+  {{ adsense|safe }}
+  <style>
+    body { max-width: 600px; margin: 40px auto; font-family: 'Pretendard', Arial, sans-serif; background: #fafbfc; color: #222;}
+    header { text-align: center; margin-bottom: 30px; }
+    nav a { margin: 0 12px; text-decoration: none; color: #0066c0;}
+    .ad { margin: 24px 0; }
+    footer { color: #999; font-size: 13px; text-align: center; margin-top: 40px;}
+  </style>
+</head>
+<body>
+<header>
+  <h1>LottoGen</h1>
+  <nav>
+    <a href="/">홈</a>
+    <a href="/generate">번호 생성</a>
+    <a href="/stats">출현 통계</a>
+    <a href="/filter">번호 필터</a>
+    <a href="/about">소개</a>
+    <a href="/privacy">개인정보</a>
+    <a href="/contact">문의</a>
+  </nav>
+</header>
+<div class="ad">
+  <!-- 광고영역 -->
+  <ins class="adsbygoogle"
+      style="display:block; text-align:center;"
+      data-ad-client="ca-pub-xxxxxxxxxxxx"
+      data-ad-slot="0000000000"
+      data-ad-format="auto"
+      data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+<main>
+  {% block content %}{% endblock %}
+</main>
+<footer>
+  &copy; 2025 LottoGen. 모든 권리 보유.
+</footer>
+</body>
+</html>
