@@ -2,6 +2,11 @@ from flask import Flask, render_template_string, request
 import random, json, os
 
 BASE_HEAD = """
+<head>
+  <title>로또-Gen | 무료 로또 번호 생성기</title>
+  <meta name="description" content="로또-Gen은 무료로 로또 번호를 생성하고, 통계를 분석하며, 다양한 필터링 기능을 제공합니다.">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQZH4QEBGX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -9,8 +14,7 @@ BASE_HEAD = """
     gtag('js', new Date());
     gtag('config','G-WQZH4QEBGX');
   </script>
-  <charset="utf-8">
-  <name="viewport" content="width=device-width, initial-scale=1">
+</head>
 """
 
 
@@ -47,14 +51,12 @@ def about():
     return render_template_string("""
     <html>
     {{ base_head|safe }}
-    <body>
-          <h1>About | LottoGen</h1>
-      <name="description" content="로또-Gen은 로또번호 생성기입니다. …">
     <body style='font-family:sans-serif; text-align:center; margin-top:50px;'>
       <h1>About LottoGen</h1>
-      <p>이 웹앱은 로또 번호 생성, 통계 분석, 필터링 기능을 제공합니다.</p>
+      <p>로또-Gen은 로또번호 생성기입니다. 이 웹앱은 로또 번호 생성, 통계 분석, 필터링 기능을 제공합니다.</p>
       <br><a href="/">← 홈으로</a>
-    </body></html>
+    </body>
+    </html>
     """, base_head=BASE_HEAD)
 
 @app.route("/privacy")
@@ -62,11 +64,9 @@ def privacy():
     return render_template_string("""
     <html>
     {{ base_head|safe }}
-      <h1>Privacy Policy | LottoGen</h1>
-      <name="description" content="로또-Gen 개인정보 처리방침입니다. …">
     <body style='font-family:sans-serif; text-align:center; margin-top:50px;'>
       <h1>Privacy Policy</h1>
-      <p>이 사이트는 개인 정보를 수집하지 않습니다. …</p>
+      <p>로또-Gen 개인정보 처리방침입니다. 이 사이트는 개인 정보를 수집하지 않습니다. …</p>
       <br><a href="/">← 홈으로</a>
     </body></html>
     """, base_head=BASE_HEAD)
@@ -76,13 +76,12 @@ def contact():
     return render_template_string("""
     <html>
     {{ base_head|safe }}
-      <h1>Contact | LottoGen</h1>
-      <name="description" content="로또-Gen 문의 페이지입니다. …">
     <body style='font-family:sans-serif; text-align:center; margin-top:50px;'>
       <h1>Contact Us</h1>
-      <p>문의: example@yourdomain.com</p>
+      <p>로또-Gen 문의 페이지입니다. 문의: example@yourdomain.com</p>
       <br><a href="/">← 홈으로</a>
-    </body></html>
+    </body>
+    </html>
     """, base_head=BASE_HEAD)
 
 @app.route("/generate")
