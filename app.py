@@ -21,6 +21,7 @@ def home():
     <html><body style='text-align:center; font-family:sans-serif; margin-top:50px;'>
         <h1>🎲 LottoGen에 오신 걸 환영합니다 🎲</h1>
         <a href="/generate">무료 로또 번호 생성</a><br><br>
+        <a href="/generate-hot10">최근 10주 인기번호 추천</a><br><br>
         <a href="/filter">제외 조합 설정하기</a><br><br>
         <a href="/stats">출현 통계 보기</a>
     </body></html>""")
