@@ -1,1 +1,18 @@
+{% extends "base.html" %}
+{% block title %}로또 번호 자동 생성기 - LottoGen{% endblock %}
+{% block meta_description %}클릭 한 번으로 6자리 로또 번호를 자동으로 생성해 보세요! 중복/당첨조합은 자동제외!{% endblock %}
+{% block content %}
+<p>아래 버튼을 클릭하면 <strong>로또 번호</strong>를 자동 생성합니다. 이미 1등에 당첨된 조합은 제외됩니다.</p>
+<form method="POST">
+  <button type="submit">번호 생성하기</button>
+</form>
+{% if numbers %}
+  <h3>추천 번호</h3>
+  <ul>
+    {% for nums in numbers %}
+      <li>{{ nums|join(', ') }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}
 
